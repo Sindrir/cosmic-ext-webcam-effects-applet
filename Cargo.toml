@@ -1,0 +1,62 @@
+[package]
+name = "cosmic-ext-webcam-effects-applet"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0"
+description = "Webcam background effects for the COSMIC desktop"
+repository = "https://github.com/Sindrir/cosmic-ext-webcam-effects-applet"
+
+[lib]
+name = "cosmic_ext_webcam_effects_applet"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cosmic-ext-webcam-effects-applet"
+path = "src/bin/applet.rs"
+
+[[bin]]
+name = "cosmic-ext-webcam-effects-applet-daemon"
+path = "src/bin/daemon.rs"
+
+[dependencies]
+futures-util = "0.3.31"
+libc = "0.2"
+i18n-embed-fl = "0.10"
+image = "0.25"
+ndarray = "0.17"
+palette = "0.7"
+rust-embed = "8.7.2"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1.48.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = "2"
+v4l = "0.14"
+zbus = { version = "5", features = ["tokio"] }
+
+[dependencies.i18n-embed]
+version = "0.16"
+features = ["fluent-system", "desktop-requester"]
+
+[dependencies.ort]
+version = "2.0.0-rc.12"
+features = ["cuda"]
+
+[dependencies.libcosmic]
+git = "https://github.com/pop-os/libcosmic.git"
+features = [
+    "applet",
+    "applet-token",
+    "dbus-config",
+    "multi-window",
+    "tokio",
+    "wayland",
+    "winit",
+    "xdg-portal",
+]
+
+# Uncomment to test a locally-cloned libcosmic
+# [patch.'https://github.com/pop-os/libcosmic']
+# libcosmic = { path = "../libcosmic" }
+# cosmic-config = { path = "../libcosmic/cosmic-config" }
+# cosmic-theme = { path = "../libcosmic/cosmic-theme" }

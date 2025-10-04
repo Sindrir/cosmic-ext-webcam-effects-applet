@@ -1,0 +1,14 @@
+The ONNX model weights in this directory are third-party artifacts
+redistributed under their original licenses.
+
+──────────────────────────────────────────────────────────────────────
+
+rvm_mobilenetv3_fp32.onnx
+  Project:   Robust Video Matting (RVM)
+  Author:    Shanchuan Lin, Linjie Yang, Imran Saleemi, Soumyadip Sengupta
+  Source:    https://github.com/PeterL1n/RobustVideoMatting
+  License:   GPL-3.0 (GNU General Public License v3.0)
+  Copyright: Copyright (c) 2021 Peter Lin
+
+  The full GPL-3.0 license text is available at:
+  https://www.gnu.org/licenses/gpl-3.0.en.html

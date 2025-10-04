@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Webcam Effects for COSMIC™
+Comment=An unofficial webcam background effects applet for the COSMIC™ desktop
+Type=Application
+Icon=dev.sindrir.CosmicExtWebcamEffectsApplet
+Exec=cosmic-ext-webcam-effects-applet %F
+Terminal=false
+StartupNotify=true
+Categories=COSMIC
+Keywords=COSMIC;webcam;camera;background;blur;effects
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+MimeType=
