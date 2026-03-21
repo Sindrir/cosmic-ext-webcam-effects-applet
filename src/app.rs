@@ -7,7 +7,7 @@ use cosmic::applet::{menu_button, padded_control};
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::dialog::file_chooser;
 use cosmic::iced::widget::Image;
-use cosmic::iced::{window::Id, Color, Length, Limits, Subscription};
+use cosmic::iced::{window::Id, Background, Color, Length, Limits, Subscription};
 use cosmic::iced_runtime::core::image::Handle as ImageHandle;
 use cosmic::iced_winit::commands::popup::{destroy_popup, get_popup};
 use cosmic::prelude::*;
@@ -186,17 +186,55 @@ impl cosmic::Application for AppModel {
     }
 
     fn view(&self) -> Element<'_, Self::Message> {
-        let icon_name = if self.pipeline_running {
-            "camera-web-symbolic"
-        } else {
-            "camera-disabled-symbolic"
-        };
+        if self.pipeline_running {
+            let suggested = self.core.applet.suggested_size(true);
+            let icon_size = suggested.0;
+            let total = icon_size as f32;
 
-        self.core
-            .applet
-            .icon_button(icon_name)
-            .on_press(Message::TogglePopup)
-            .into()
+            let icon = widget::icon::from_name("camera-web-symbolic")
+                .symbolic(true)
+                .size(icon_size)
+                .into();
+            let icon = widget::icon(icon)
+                .class(cosmic::theme::Svg::Custom(std::rc::Rc::new(|theme| {
+                    cosmic::iced_widget::svg::Style {
+                        color: Some(theme.cosmic().background.on.into()),
+                    }
+                })))
+                .width(Length::Fixed(total))
+                .height(Length::Fixed(total));
+
+            // Accent square fills the full icon area, sitting behind the camera
+            let accent_square = widget::container(widget::Space::new())
+                .width(Length::Fixed(total))
+                .height(Length::Fixed(total))
+                .class(cosmic::theme::Container::custom(|theme| {
+                    let accent = theme.cosmic().accent_color();
+                    cosmic::widget::container::Style {
+                        background: Some(Background::Color(accent.into())),
+                        border: cosmic::iced::Border {
+                            radius: 4.0.into(),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    }
+                }));
+
+            let layered: Element<'_, Self::Message> =
+                cosmic::iced::widget::stack![accent_square, icon].into();
+
+            self.core
+                .applet
+                .button_from_element(layered, true)
+                .on_press(Message::TogglePopup)
+                .into()
+        } else {
+            self.core
+                .applet
+                .icon_button("camera-web-symbolic")
+                .on_press(Message::TogglePopup)
+                .into()
+        }
     }
 
     fn view_window(&self, _id: Id) -> Element<'_, Self::Message> {
