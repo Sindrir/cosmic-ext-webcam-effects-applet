@@ -189,20 +189,34 @@ impl cosmic::Application for AppModel {
         if self.pipeline_running {
             let suggested = self.core.applet.suggested_size(true);
             let icon_size = suggested.0;
-            let total = icon_size as f32;
+            let padding = 4.0;
+            let total = icon_size as f32 + padding * 2.0;
 
             let icon = widget::icon::from_name("camera-web-symbolic")
                 .symbolic(true)
                 .size(icon_size)
                 .into();
-            let icon = widget::icon(icon)
+            let icon = widget::container(widget::icon(icon)
                 .class(cosmic::theme::Svg::Custom(std::rc::Rc::new(|theme| {
+                    let accent = theme.cosmic().accent_color();
+                    // Relative luminance (BT.709) to decide icon contrast
+                    let luminance =
+                        0.2126 * accent.red + 0.7152 * accent.green + 0.0722 * accent.blue;
+                    let icon_color = if luminance > 0.5 {
+                        theme.cosmic().background.base.into()
+                    } else {
+                        theme.cosmic().background.on.into()
+                    };
                     cosmic::iced_widget::svg::Style {
-                        color: Some(theme.cosmic().background.on.into()),
+                        color: Some(icon_color),
                     }
                 })))
+                .width(Length::Fixed(icon_size as f32))
+                .height(Length::Fixed(icon_size as f32)))
                 .width(Length::Fixed(total))
-                .height(Length::Fixed(total));
+                .height(Length::Fixed(total))
+                .align_x(cosmic::iced::alignment::Horizontal::Center)
+                .align_y(cosmic::iced::alignment::Vertical::Center);
 
             // Accent square fills the full icon area, sitting behind the camera
             let accent_square = widget::container(widget::Space::new())
