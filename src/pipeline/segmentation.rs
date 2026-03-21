@@ -42,12 +42,14 @@ impl Segmenter {
             }
             Err(e) => {
                 tracing::warn!("CUDA EP registration failed, using CPU: {e}");
-                e.recover()
+                // Re-create builder without CUDA EP
+                Session::builder()
+                    .map_err(|e| format!("session builder (fallback): {e}"))?
             }
         };
 
         tracing::info!("Setting intra threads...");
-        let mut builder = builder
+        let builder = builder
             .with_intra_threads(2)
             .map_err(|e| format!("intra threads: {e}"))?;
 
