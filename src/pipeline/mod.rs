@@ -43,6 +43,19 @@ pub enum PipelineStatus {
 
 const PREVIEW_MAX_WIDTH: u32 = 320;
 
+/// Scale `img` to cover `target_w x target_h` while preserving aspect ratio,
+/// then center-crop to the exact target size.
+fn resize_cover(img: &RgbImage, target_w: u32, target_h: u32) -> RgbImage {
+    let scale = (target_w as f32 / img.width() as f32)
+        .max(target_h as f32 / img.height() as f32);
+    let scaled_w = ((img.width() as f32 * scale).round() as u32).max(target_w);
+    let scaled_h = ((img.height() as f32 * scale).round() as u32).max(target_h);
+    let scaled = image::imageops::resize(img, scaled_w, scaled_h, image::imageops::FilterType::Triangle);
+    let x = (scaled_w - target_w) / 2;
+    let y = (scaled_h - target_h) / 2;
+    image::imageops::crop_imm(&scaled, x, y, target_w, target_h).to_image()
+}
+
 /// Run the pipeline in a background thread, communicating via channels.
 pub fn spawn_pipeline(
     mut cmd_rx: mpsc::Receiver<PipelineCommand>,
@@ -414,11 +427,7 @@ impl PipelineState {
         let w = cap.width();
         let h = cap.height();
         self.background_image_resized = self.background_image.as_ref().map(|bg| {
-            if bg.width() == w && bg.height() == h {
-                bg.clone()
-            } else {
-                image::imageops::resize(bg, w, h, image::imageops::FilterType::Triangle).into()
-            }
+            resize_cover(bg, w, h)
         });
     }
 

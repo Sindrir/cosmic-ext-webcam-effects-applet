@@ -4,6 +4,7 @@ use image::RgbImage;
 use std::collections::HashSet;
 use std::path::Path;
 use v4l::buffer::Type;
+use v4l::framesize::FrameSizeEnum;
 use v4l::io::mmap::Stream;
 use v4l::io::traits::CaptureStream;
 use v4l::video::Capture;
@@ -98,19 +99,22 @@ impl CaptureDevice {
     pub fn open(path: &str) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let dev = Device::with_path(path)?;
 
-        // Try to set a reasonable format
+        // Use the camera's native resolution. Prefer MJPEG, fall back to YUYV.
+        let (best_w, best_h) = best_frame_size(&dev, FourCC::new(b"MJPG"))
+            .or_else(|| best_frame_size(&dev, FourCC::new(b"YUYV")))
+            .unwrap_or((640, 480));
+
         let mut fmt = dev.format()?;
-        // Prefer MJPEG, fall back to YUYV
         fmt.fourcc = FourCC::new(b"MJPG");
-        fmt.width = 640;
-        fmt.height = 480;
+        fmt.width = best_w;
+        fmt.height = best_h;
         let fmt = match dev.set_format(&fmt) {
             Ok(f) => f,
             Err(_) => {
                 let mut fmt = dev.format()?;
                 fmt.fourcc = FourCC::new(b"YUYV");
-                fmt.width = 640;
-                fmt.height = 480;
+                fmt.width = best_w;
+                fmt.height = best_h;
                 dev.set_format(&fmt)?
             }
         };
@@ -172,6 +176,18 @@ fn decode_frame(
         }
         _ => Err(format!("Unsupported pixel format: {:?}", fourcc).into()),
     }
+}
+
+/// Returns the largest supported frame size for the given pixel format.
+fn best_frame_size(dev: &Device, fourcc: FourCC) -> Option<(u32, u32)> {
+    dev.enum_framesizes(fourcc)
+        .ok()?
+        .into_iter()
+        .filter_map(|fs| match fs.size {
+            FrameSizeEnum::Discrete(d) => Some((d.width, d.height)),
+            FrameSizeEnum::Stepwise(s) => Some((s.max_width, s.max_height)),
+        })
+        .max_by_key(|(w, h)| w * h)
 }
 
 fn yuyv_to_rgb(data: &[u8], width: u32, height: u32) -> RgbImage {
